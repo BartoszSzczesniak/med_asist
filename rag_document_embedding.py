@@ -1,8 +1,8 @@
-import configparser
 import chromadb
 from beir.datasets.data_loader import GenericDataLoader
 from beir import util
 from sentence_transformers import SentenceTransformer
+from utils.config import CONFIG
 
 def format_document(doc_data: dict):
 
@@ -13,14 +13,11 @@ def format_document(doc_data: dict):
 
 def run():
 
-    config = configparser.ConfigParser()
-    config.read("config.cfg")
-
     # Download dataset
 
     data_path = util.download_and_unzip(
-        url = config['beir']['BEIR_URL'],
-        out_dir = config['beir']['BEIR_PATH']
+        url = CONFIG['beir']['url'],
+        out_dir = CONFIG['beir']['path']
         )
     corpus, _, _ = GenericDataLoader(
         data_folder = data_path
@@ -51,8 +48,8 @@ def run():
     # Load embeddings to a vetor database 
 
     chromadb. \
-        PersistentClient(path = config['chromadb']['DB_PATH']). \
-        get_or_create_collection(name = config['chromadb']['DB_COLL']). \
+        PersistentClient(path = CONFIG['chromadb']['path']). \
+        get_or_create_collection(name = CONFIG['chromadb']['collection']). \
         add(
             ids=ids,
             embeddings=doc_embeddings,
