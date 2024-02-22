@@ -1,4 +1,6 @@
+.venv
 .env
 data/
-notes.*
 resources/
+notes.*
+requirements.txt
