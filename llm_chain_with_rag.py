@@ -64,19 +64,13 @@ def build_chain():
 
     return {"context": retriever, "question": RunnablePassthrough()} | llm_prompt | llm | parser
 
-def run_io_script(chain):
-
-    while True:
-        
-        question = input("\nQuestion: ")
-
-        print("Answer: ", end="", flush=True)
-
-        for s in chain.stream(question):
-            print(s, end="", flush=True)
-
 if __name__ == "__main__":
 
     chain = build_chain()
 
-    run_io_script(chain)
+    while True:
+        question = input("\nQuestion: ")
+        
+        print("Answer: ", end="", flush=True)
+        for s in chain.stream(question):
+            print(s, end="", flush=True)
