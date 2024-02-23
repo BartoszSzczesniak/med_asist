@@ -40,16 +40,23 @@ def build_chain():
     # prompt template
 
     llm_prompt_template = """
-        Generate the answer to the question using only given context and no prior knowledge.
-        Your answer should be as concise as possible.
-        If the context is empty, answer only that you have no information on this topic.
-        
-        Context: {context}
-        
-        Question: {question}
-        
-        Answer:
-    """
+
+[INST] <<SYS>>
+You are a helpful and concise assistant. Always return a concise list of facts regarding the question based on the provided context. 
+The list should not include any harmful, unethical or illegal content, it should be socially unbiased and positive in nature.
+The list should be based only on the provided context information and no prior knowledge.
+Include only information relevant to the question and include all the details.
+If the provided context does not contain relevant information, concisely answer that there is no information available on this topic.
+If the question does not make any sense, or is not factually coherent, explain that the question is invalid.
+<</SYS>>
+Context: {context}
+
+Question: {question} 
+[/INST]
+
+Answer: Based on the provided context, here is the list of facts regarding your question: 
+
+"""
 
     llm_prompt = PromptTemplate(
         input_variables=['question', 'context'],
