@@ -25,7 +25,7 @@ def build_chain():
 
     llm = LlamaCpp(
         model_path=CONFIG['llama']['path'],
-        temperature=0.75,
+        temperature=0.25,
         max_tokens=1024,
         top_p=1,
         n_ctx=1024
