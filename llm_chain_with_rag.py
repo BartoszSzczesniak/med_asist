@@ -28,8 +28,7 @@ def build_chain():
         temperature=0.75,
         max_tokens=1024,
         top_p=1,
-        n_ctx=1024, 
-        cache=True
+        n_ctx=1024
     )
     llm.client.verbose = False
 
