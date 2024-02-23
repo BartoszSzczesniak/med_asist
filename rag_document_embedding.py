@@ -1,6 +1,6 @@
 import chromadb
 from beir.datasets.data_loader import GenericDataLoader
-from beir import util
+from beir.util import download_and_unzip
 from sentence_transformers import SentenceTransformer
 from utils.config import CONFIG
 
@@ -15,7 +15,7 @@ def run():
 
     # Download dataset
 
-    data_path = util.download_and_unzip(
+    data_path = download_and_unzip(
         url = CONFIG['beir']['url'],
         out_dir = CONFIG['beir']['path']
         )
