@@ -1,3 +1,4 @@
+import torch
 import chromadb
 
 from langchain_core.prompts import PromptTemplate
@@ -23,12 +24,15 @@ def build_chain():
 
     # LLM
 
+    gpu_args = {"n_gpu_layers": -1, "n_batch": 256} if torch.cuda.is_available() else {}
+
     llm = LlamaCpp(
         model_path=CONFIG['llama']['path'],
         temperature=0.25,
         max_tokens=1024,
-        top_p=1,
-        n_ctx=1024
+        top_p=1, 
+        n_ctx=1024,
+        **gpu_args
     )
     llm.client.verbose = False
 
