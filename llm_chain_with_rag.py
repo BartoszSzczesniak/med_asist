@@ -1,11 +1,14 @@
+import os
 import torch
 import chromadb
+
+from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig, TextStreamer, pipeline
 
 from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 
-from langchain_community.llms.llamacpp import LlamaCpp
+from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 
 from sentence_transformers import SentenceTransformer
 
@@ -24,17 +27,44 @@ def build_chain():
 
     # LLM
 
-    gpu_args = {"n_gpu_layers": -1, "n_batch": 256} if torch.cuda.is_available() else {}
-
-    llm = LlamaCpp(
-        model_path=CONFIG['llama']['path'],
-        temperature=0.25,
-        max_tokens=1024,
-        top_p=1, 
-        n_ctx=1024,
-        **gpu_args
+    quantization_config = BitsAndBytesConfig(
+        load_in_4bit=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=torch.float16,
     )
-    llm.client.verbose = False
+
+    tokenizer = AutoTokenizer.from_pretrained(
+        pretrained_model_name_or_path=CONFIG["llama"]["path"],
+        token=os.environ['HUGGINGFACE_API_KEY']
+    )
+
+    model = AutoModelForCausalLM.from_pretrained(
+        pretrained_model_name_or_path=CONFIG["llama"]["path"],
+        load_in_8bit=False,
+        device_map="auto",
+        torch_dtype=torch.float16,
+        quantization_config=quantization_config,
+        token=os.environ['HUGGINGFACE_API_KEY']
+    )
+
+    streamer = TextStreamer(tokenizer, skip_prompt=True)
+    
+    hf_pipeline = pipeline(
+        task="text-generation",
+        model=model,
+        tokenizer=tokenizer,
+        torch_dtype=torch.bfloat16,
+        device_map="auto",
+        max_new_tokens=512,
+        top_p=1,
+        num_return_sequences=1,
+        eos_token_id=tokenizer.eos_token_id,
+        bos_token_id=tokenizer.bos_token_id,
+        temperature=0.25,
+        streamer=streamer
+    )
+
+    llm = HuggingFacePipeline(pipeline=hf_pipeline)
 
     # RAG model / retriever
 
