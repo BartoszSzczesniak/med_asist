@@ -47,7 +47,7 @@ def build_chain():
         token=os.environ['HUGGINGFACE_API_KEY']
     )
 
-    streamer = TextStreamer(tokenizer, skip_prompt=True)
+    # streamer = TextStreamer(tokenizer, skip_prompt=True)
     
     hf_pipeline = pipeline(
         task="text-generation",
@@ -61,7 +61,7 @@ def build_chain():
         eos_token_id=tokenizer.eos_token_id,
         bos_token_id=tokenizer.bos_token_id,
         temperature=0.25,
-        streamer=streamer
+        # streamer=streamer
     )
 
     llm = HuggingFacePipeline(pipeline=hf_pipeline)
