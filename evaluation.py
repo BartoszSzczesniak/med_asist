@@ -29,14 +29,15 @@ dataset_input = [{"question": question} for question in list(queries.values())[:
 
 client = Client()
 
-dataset_name = "med_assist_evaluation"
-    
+dataset_name = "med_assist_evaluation_" + datetime.now().strftime('%m%d-%H%M')
+dataset_descr = "Medical assistant evaluation"
+
 if client.has_dataset(dataset_name=dataset_name):
-    client.delete_dataset(dataset_name=dataset_name)
+    raise NameError("Dataset name already exist")
 
 dataset = client.create_dataset(
     dataset_name=dataset_name,
-    description="Test of med_assist project evaluation"
+    description=dataset_descr
 )
 
 client.create_examples(
@@ -58,8 +59,8 @@ eval_chain = format_input | chain
 client.run_on_dataset(
     dataset_name=dataset_name,
     llm_or_chain_factory=eval_chain,
-    evaluation=eval_config,
+    # evaluation=eval_config,
     verbose=True,
-    project_name="evaluation_test_"+datetime.now().strftime('%H%M'),
+    project_name="evaluation_test",
     concurrency_level=1
 )
