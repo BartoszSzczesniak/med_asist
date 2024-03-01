@@ -13,7 +13,7 @@ from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from sentence_transformers import SentenceTransformer
 
 from utils.config import CONFIG
-from utils.classes import STCDBRetriever
+from utils.classes import STCDBRetriever, Llama2
 
 def build_chain():
 
@@ -27,44 +27,7 @@ def build_chain():
 
     # LLM
 
-    quantization_config = BitsAndBytesConfig(
-        load_in_4bit=True,
-        bnb_4bit_quant_type="nf4",
-        bnb_4bit_compute_dtype=torch.float16,
-    )
-
-    tokenizer = AutoTokenizer.from_pretrained(
-        pretrained_model_name_or_path=CONFIG["llama"]["path"],
-        token=os.environ['HUGGINGFACE_API_KEY']
-    )
-
-    model = AutoModelForCausalLM.from_pretrained(
-        pretrained_model_name_or_path=CONFIG["llama"]["path"],
-        load_in_8bit=False,
-        device_map="auto",
-        torch_dtype=torch.float16,
-        quantization_config=quantization_config,
-        token=os.environ['HUGGINGFACE_API_KEY']
-    )
-
-    # streamer = TextStreamer(tokenizer, skip_prompt=True)
-    
-    hf_pipeline = pipeline(
-        task="text-generation",
-        model=model,
-        tokenizer=tokenizer,
-        torch_dtype=torch.bfloat16,
-        device_map="auto",
-        max_new_tokens=512,
-        top_p=1,
-        num_return_sequences=1,
-        eos_token_id=tokenizer.eos_token_id,
-        bos_token_id=tokenizer.bos_token_id,
-        temperature=0.25,
-        # streamer=streamer
-    )
-
-    llm = HuggingFacePipeline(pipeline=hf_pipeline)
+    llm = Llama2()
 
     # RAG model / retriever
 
