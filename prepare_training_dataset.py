@@ -1,6 +1,9 @@
 import os
 from tqdm.autonotebook import tqdm
 from datetime import datetime
+
+import torch
+
 from beir.datasets.data_loader import GenericDataLoader
 from beir.util import download_and_unzip
 
@@ -48,9 +51,11 @@ for doc in tqdm(docs):
 
     example_input = {"prompt": doc_input.to_string()}
     example_output = {"output": doc_output}
-    
+
     client.create_example(
         dataset_name=DATASET_NAME,
         inputs=example_input,
         outputs=example_output
         )
+    
+    torch.cuda.empty_cache()
