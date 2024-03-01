@@ -41,16 +41,15 @@ chain = build_chain()
 make_input = chain.steps[0] | chain.steps[1]
 make_output = chain.steps[2] | chain.steps[3]
 
-ids = list(corpus.keys())
-docs = [format_document(corpus.get(id)) for id in ids]
+questions = list(queries.values())
 
-for doc in tqdm(docs):
+for question in tqdm(questions):
 
-    doc_input = make_input.invoke(doc)
-    doc_output = make_output.invoke(doc_input)
+    prompt_input = make_input.invoke(question)
+    prompt_output = make_output.invoke(prompt_input)
 
-    example_input = {"prompt": doc_input.to_string()}
-    example_output = {"output": doc_output}
+    example_input = {"prompt": prompt_input.to_string()}
+    example_output = {"output": prompt_output}
 
     client.create_example(
         dataset_name=DATASET_NAME,
