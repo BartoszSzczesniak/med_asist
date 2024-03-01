@@ -63,6 +63,7 @@ class Llama2(LLM):
             temperature=0.25,
             torch_dtype=torch.bfloat16,
             max_new_tokens=512,
+            max_length=4096,
             num_return_sequences=1,
             top_p=1
             )
@@ -86,7 +87,9 @@ class Llama2(LLM):
         if stop is not None:
             raise ValueError("stop kwargs are not permitted.")
         
-        input_tokens = self.tokenizer(prompt, return_tensors="pt", padding=True).input_ids.to("cuda")
+        max_length = self.model.config.max_length
+        
+        input_tokens = self.tokenizer(prompt, return_tensors="pt", padding=True).input_ids[:, :max_length].to("cuda")
         output_tokens = self.model.generate(input_tokens)
         generated_tokens = output_tokens[:, input_tokens.shape[1]:]
         result = self.tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)[0]
