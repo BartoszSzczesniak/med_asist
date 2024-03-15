@@ -5,4 +5,5 @@ __pycache__
 notes.*
 data/
 resources/
+models/
 requirements.txt
