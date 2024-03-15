@@ -39,7 +39,7 @@ def build_chain():
     llm_prompt_template = """
 
 [INST] <<SYS>>
-You are a helpful and concise assistant. Always return a concise list of facts regarding the question based on the provided context. 
+You are a helpful and concise assistant. Always return a concise numbered list of facts regarding the question based on the provided context. 
 The list should not include any harmful, unethical or illegal content, it should be socially unbiased and positive in nature.
 The list should be based only on the provided context information and no prior knowledge.
 Include only information relevant to the question and include all the details.
