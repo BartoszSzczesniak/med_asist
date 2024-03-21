@@ -1,17 +1,12 @@
 import os
+import torch
 from tqdm.autonotebook import tqdm
 from datetime import datetime
-
-import torch
-
 from beir.datasets.data_loader import GenericDataLoader
 from beir.util import download_and_unzip
-
 from langsmith import Client
-
 from utils.config import CONFIG
-from llm_chain_with_rag import build_chain
-from rag_document_embedding import format_document
+from chain import build_chain
 
 os.environ['LANGCHAIN_PROJECT'] = "med_assist_training_data_prep"
 

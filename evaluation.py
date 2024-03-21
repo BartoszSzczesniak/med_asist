@@ -1,15 +1,12 @@
 from datetime import datetime
 from dotenv import load_dotenv
-
 from beir.datasets.data_loader import GenericDataLoader
 from beir.util import download_and_unzip
-
 from langsmith import Client
 from langchain.smith import RunEvalConfig
 from langchain_core.runnables import RunnableLambda
-
 from utils.config import CONFIG
-from llm_chain_with_rag import build_chain
+from chain import build_chain
 
 load_dotenv()
 

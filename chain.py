@@ -1,17 +1,8 @@
-import os
-import torch
 import chromadb
-from typing import Optional
-from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig, TextStreamer, pipeline
-
 from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
-
-from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
-
 from sentence_transformers import SentenceTransformer
-
 from utils.config import CONFIG
 from utils.classes import STCDBRetriever, Llama2
 

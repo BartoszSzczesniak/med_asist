@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from langserve import add_routes
-from llm_chain_with_rag import build_chain
+from chain import build_chain
 from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
 
