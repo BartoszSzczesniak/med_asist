@@ -1,7 +1,7 @@
 import os
 import torch
 import chromadb
-
+from typing import Optional
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig, TextStreamer, pipeline
 
 from langchain_core.prompts import PromptTemplate
@@ -27,7 +27,7 @@ def build_chain():
 
     # LLM
 
-    llm = Llama2()
+    llm = Llama2(adapter_path=CONFIG['llama']['adapter'])
 
     # RAG model / retriever
 
