@@ -5,9 +5,10 @@ from beir.util import download_and_unzip
 from langsmith import Client
 from langchain.smith import RunEvalConfig
 from langchain_core.runnables import RunnableLambda
-from utils.config import CONFIG
-from chain import build_chain
+from med_assist.config import CONFIG, set_project_wd
+from med_assist.chain import build_chain
 
+set_project_wd()
 load_dotenv()
 
 # Prepare dataset 

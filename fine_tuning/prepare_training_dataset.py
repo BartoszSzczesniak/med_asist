@@ -5,8 +5,10 @@ from datetime import datetime
 from beir.datasets.data_loader import GenericDataLoader
 from beir.util import download_and_unzip
 from langsmith import Client
-from utils.config import CONFIG
-from chain import build_chain
+from med_assist.config import CONFIG, set_project_wd
+from med_assist.chain import build_chain
+
+set_project_wd()
 
 os.environ['LANGCHAIN_PROJECT'] = "med_assist_training_data_prep"
 

@@ -4,7 +4,9 @@ from datasets import load_dataset
 from transformers import AutoConfig, AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig, TrainingArguments
 from peft import LoraConfig, get_peft_model
 from trl import SFTTrainer
-from utils.config import CONFIG
+from med_assist.config import CONFIG, set_project_wd
+
+set_project_wd()
 
 tuned_model_path = "models/tuned/llama-2-med-assist-v0.2" 
 
