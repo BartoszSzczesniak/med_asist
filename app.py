@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from langserve import add_routes
-from chain import build_chain
-from langchain_openai import ChatOpenAI
+from med_assist.chain import build_chain
 from dotenv import load_dotenv
 
 load_dotenv()

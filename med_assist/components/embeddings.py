@@ -2,7 +2,7 @@ import chromadb
 from beir.datasets.data_loader import GenericDataLoader
 from beir.util import download_and_unzip
 from sentence_transformers import SentenceTransformer
-from utils.config import CONFIG
+from med_assist.config import CONFIG
 
 def format_document(doc_data: dict):
 
@@ -11,7 +11,7 @@ def format_document(doc_data: dict):
 
     return f"{title}; {text}"
 
-def run():
+def embed_and_persist_dataset():
 
     # Download dataset
 
@@ -45,7 +45,7 @@ def run():
 
     doc_embeddings = emb_model.encode(docs, show_progress_bar=True).tolist()
 
-    # Load embeddings to a vetor database 
+    # Load embeddings to a vector database 
 
     chromadb. \
         PersistentClient(path = CONFIG['chromadb']['path']). \
@@ -57,4 +57,4 @@ def run():
             )
     
 if __name__ == "__main__":
-    run()
+    embed_and_persist_dataset()

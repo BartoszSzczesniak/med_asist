@@ -3,8 +3,9 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 from sentence_transformers import SentenceTransformer
-from utils.config import CONFIG
-from utils.classes import STCDBRetriever, Llama2
+from med_assist.config import CONFIG
+from med_assist.components.retriever import Retriever
+from med_assist.components.llm import Llama2
 
 def build_chain():
 
@@ -23,7 +24,7 @@ def build_chain():
     # RAG model / retriever
 
     emb_model = SentenceTransformer(model_name_or_path=CONFIG['gist']['path'])
-    retriever = STCDBRetriever(model=emb_model, collection=collection, n_results=1)
+    retriever = Retriever(model=emb_model, collection=collection, n_results=1)
 
     # prompt template
 
