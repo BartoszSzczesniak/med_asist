@@ -1,9 +1,11 @@
-__pycache__
-.venv
 .env
+env
+venv
+*.egg-info
+__pycache__
 .ipynb_checkpoints/
 notes.*
 data/
 resources/
 models/
-requirements.txt
+build/
