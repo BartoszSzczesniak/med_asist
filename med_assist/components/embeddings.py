@@ -11,8 +11,21 @@ def format_document(doc_data: dict):
 
     return f"{title}; {text}"
 
-def embed_and_persist_dataset():
+def check_for_embeddings():
+    """Checks if embeddings exist"""
+    
+    collections = chromadb. \
+        PersistentClient(path = CONFIG['chromadb']['path']). \
+        list_collections()
 
+    collection_names = [collection.name for collection in collections]
+    
+    embeddings_exist = CONFIG['chromadb']['collection'] in collection_names
+    
+    return embeddings_exist
+
+def create_embeddings():
+    """Downloads dataset, create embeddings and loads them into vector database."""
     # Download dataset
 
     data_path = download_and_unzip(
@@ -57,4 +70,4 @@ def embed_and_persist_dataset():
             )
     
 if __name__ == "__main__":
-    embed_and_persist_dataset()
+    create_embeddings()
