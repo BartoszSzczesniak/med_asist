@@ -19,7 +19,7 @@ def build_chain():
 
     # LLM
 
-    llm = Llama2(adapter_path=CONFIG['llama']['adapter'])
+    llm = Llama2(model=CONFIG['llama']['tuned_path'])
 
     # RAG model / retriever
 
