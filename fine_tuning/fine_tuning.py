@@ -29,7 +29,7 @@ quantization_config = BitsAndBytesConfig(
 )
 
 model_config = AutoConfig.from_pretrained(
-    CONFIG['llama']['path'],
+    CONFIG['llama']['base_path'],
     device_map="auto",
     do_sample=True,
     temperature=0.25,
@@ -45,7 +45,7 @@ model_config = AutoConfig.from_pretrained(
 model_config.pad_token_id = model_config.eos_token_id
 
 tokenizer = AutoTokenizer.from_pretrained(
-    pretrained_model_name_or_path=CONFIG["llama"]["path"],
+    pretrained_model_name_or_path=CONFIG["llama"]["base_path"],
     token=hf_token
 )
 
@@ -53,7 +53,7 @@ tokenizer.pad_token_id = model_config.eos_token_id
 tokenizer.padding_side = "right"
 
 model = AutoModelForCausalLM.from_pretrained(
-    pretrained_model_name_or_path=CONFIG["llama"]["path"],
+    pretrained_model_name_or_path=CONFIG["llama"]["base_path"],
     config=model_config,
     quantization_config=quantization_config,
     token=hf_token
