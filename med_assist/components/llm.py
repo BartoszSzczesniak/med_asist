@@ -1,6 +1,6 @@
 import os
 import torch
-from typing import List, Mapping, Any, Optional
+from typing import List, Mapping, Any, Optional, Union
 from langchain_core.language_models.llms import LLM
 from langchain_core.callbacks.manager import CallbackManagerForLLMRun
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig, AutoConfig
@@ -9,8 +9,8 @@ from med_assist.config import CONFIG
 
 class Llama2(LLM):
     hf_token: Optional[str] = None
-    tokenizer: Optional[AutoTokenizer] = None
-    model: Optional[AutoModelForCausalLM] = None
+    tokenizer: Optional[Union[AutoTokenizer,str]] = None
+    model: Optional[Union[AutoModelForCausalLM,str]] = None
     adapter_path: Optional[str] = None
 
     def __init__(self, hf_token=None, tokenizer=None, model=None, adapter_path=None) -> None:
@@ -19,15 +19,24 @@ class Llama2(LLM):
         if self.hf_token == None:
             self.hf_token = os.environ['HUGGINGFACE_API_KEY']
 
+        if self.model == None:
+            self.model = CONFIG["llama"]["base_path"]
+
         if self.tokenizer == None:
+            self.tokenizer = CONFIG["llama"]["base_path"]
+
+        if isinstance(self.tokenizer, str):
+            tokenizer_path = self.tokenizer
+            
             self.tokenizer = AutoTokenizer.from_pretrained(
-                pretrained_model_name_or_path=CONFIG["llama"]["path"],
+                pretrained_model_name_or_path=tokenizer_path,
                 token=self.hf_token
                 )
 
             self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
-
-        if self.model == None:
+        
+        if isinstance(self.model, str):
+            model_path = self.model
 
             quantization_config = BitsAndBytesConfig(
                 load_in_4bit=True,
@@ -36,7 +45,7 @@ class Llama2(LLM):
                 )
 
             model_config = AutoConfig.from_pretrained(
-                CONFIG['llama']['path'],
+                pretrained_model_name_or_path=model_path,
                 device_map="auto",
                 do_sample=True,
                 temperature=0.25,
@@ -49,7 +58,7 @@ class Llama2(LLM):
             model_config.pad_token_id = model_config.eos_token_id
 
             self.model = AutoModelForCausalLM.from_pretrained(
-                pretrained_model_name_or_path=CONFIG["llama"]["path"],
+                pretrained_model_name_or_path=model_path,
                 config=model_config,
                 quantization_config=quantization_config,
                 token=self.hf_token
