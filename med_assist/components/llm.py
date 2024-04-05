@@ -8,44 +8,26 @@ from peft import PeftModel
 from med_assist.config import CONFIG
 
 class Llama2(LLM):
-    hf_token: Optional[str] = None
-    tokenizer: Optional[Union[AutoTokenizer,str]] = None
-    model: Optional[Union[AutoModelForCausalLM,str]] = None
-    adapter_path: Optional[str] = None
+    hf_token: Optional[str] = os.environ.get("HUGGINGFACE_API_KEY")
+    tokenizer: Optional[AutoTokenizer] = CONFIG.get("llama", dict()).get("base_path")
+    model: Optional[AutoModelForCausalLM] = CONFIG.get("llama", dict()).get("base_path")
+    adapter: Optional[str] = None
 
-    def __init__(self, hf_token=None, tokenizer=None, model=None, adapter_path=None) -> None:
+    def __init__(self, **args) -> None:
         super().__init__()
 
-        if self.hf_token == None:
-            self.hf_token = os.environ['HUGGINGFACE_API_KEY']
-
-        if self.model == None:
-            self.model = CONFIG["llama"]["base_path"]
-
-        if self.tokenizer == None:
-            self.tokenizer = CONFIG["llama"]["base_path"]
-
         if isinstance(self.tokenizer, str):
-            tokenizer_path = self.tokenizer
             
             self.tokenizer = AutoTokenizer.from_pretrained(
-                pretrained_model_name_or_path=tokenizer_path,
+                pretrained_model_name_or_path=self.tokenizer,
                 token=self.hf_token
                 )
-
             self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
         
         if isinstance(self.model, str):
-            model_path = self.model
-
-            quantization_config = BitsAndBytesConfig(
-                load_in_4bit=True,
-                bnb_4bit_quant_type="nf4",
-                bnb_4bit_compute_dtype=torch.float16
-                )
 
             model_config = AutoConfig.from_pretrained(
-                pretrained_model_name_or_path=model_path,
+                pretrained_model_name_or_path=self.model,
                 device_map="auto",
                 do_sample=True,
                 temperature=0.25,
@@ -56,18 +38,24 @@ class Llama2(LLM):
                 top_p=1
                 )
             model_config.pad_token_id = model_config.eos_token_id
+            
+            quantization_config = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_quant_type="nf4",
+                bnb_4bit_compute_dtype=torch.float16
+                )
 
             self.model = AutoModelForCausalLM.from_pretrained(
-                pretrained_model_name_or_path=model_path,
+                pretrained_model_name_or_path=self.model,
                 config=model_config,
                 quantization_config=quantization_config,
                 token=self.hf_token
             )
 
-        if self.adapter_path != None:
+        if self.adapter != None:
             
             self.model = PeftModel. \
-                from_pretrained(self.model, self.adapter_path). \
+                from_pretrained(self.model, self.adapter). \
                 merge_and_unload()
 
     def _call(self, prompt: str, stop: Optional[List[str]] = None, run_manager: Optional[CallbackManagerForLLMRun] = None, **kwargs: Any) -> str:
@@ -79,6 +67,7 @@ class Llama2(LLM):
         input_tokens = self.tokenizer(prompt, return_tensors="pt", padding=True).input_ids[:, :max_length].to("cuda")
         output_tokens = self.model.generate(input_tokens)
         generated_tokens = output_tokens[:, input_tokens.shape[1]:]
+        
         result = self.tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)[0]
         
         return result
@@ -90,4 +79,4 @@ class Llama2(LLM):
     @property
     def _identifying_params(self) -> Mapping[str, Any]:
         """Get the identifying parameters."""
-        return {}
+        return {"model": self.model, "tokenizer": self.tokenizer, "adapter": self.adapter}
