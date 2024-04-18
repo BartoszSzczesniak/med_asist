@@ -13,8 +13,8 @@ tuned_model_path = "models/tuned/llama-2-med-assist-v0.2"
 tuning_datasets = load_dataset(
     path="resources", 
     data_files={
-        "train": "training_dataset_hf.csv", 
-        "valid": "validation_dataset_hf.csv"},
+        "train": "training_dataset_sft.csv", 
+        "valid": "validation_dataset_sft.csv"},
     split={
         "train": "train", 
         "valid": "valid"},
