@@ -12,8 +12,13 @@ tuned_model_path = "models/tuned/llama-2-med-assist-v0.3"
 
 tuning_datasets = load_dataset(
     path="resources", 
-    data_files={"train": "training_dataset_dpo.csv"}, 
-    )
+    data_files={
+        "train": "training_dataset_dpo.csv",
+        "valid": "validation_dataset_dpo.csv"},
+    split={
+        "train": "train", 
+        "valid": "valid[0:100]"}
+        )
 
 hf_token = os.environ['HUGGINGFACE_API_KEY']
 
@@ -28,13 +33,14 @@ model_config = AutoConfig.from_pretrained(
     device_map="auto",
     do_sample=True,
     temperature=0.25,
+    low_cpu_mem_usage=True,
     torch_dtype=torch.bfloat16,
     max_new_tokens=512,
     max_length=4096,
     num_return_sequences=1,
     top_p=1,
     use_cache=False,
-    token=hf_token
+    token=hf_token,
     )
 model_config.pad_token_id = model_config.eos_token_id
 
@@ -66,6 +72,8 @@ peft_model = PeftModel.from_pretrained(
     CONFIG['llama']['adapter_path'],
     is_trainable=True,
     adapter_name="sft",
+    low_cpu_mem_usage=True,
+
 )
 
 peft_model.load_adapter(
@@ -74,31 +82,43 @@ peft_model.load_adapter(
     )
 
 training_args = TrainingArguments(
-    output_dir = "models/med_assist/",
-    per_device_train_batch_size = 4,
-    per_device_eval_batch_size = 4,
-    num_train_epochs = 5,
-    weight_decay = 0.001,
-    learning_rate = 1e-3,
+    output_dir="models/dpo/",
+    per_device_train_batch_size=2,
+    per_device_eval_batch_size=2,
+    num_train_epochs=5,
+    weight_decay=0.001,
+    learning_rate=1e-3,
     max_grad_norm=0.3,
-    optim = "paged_adamw_32bit",
+    optim="paged_adamw_32bit",
     lr_scheduler_type="cosine",
     warmup_ratio=0.03,
-    group_by_length=True,
+    group_by_length=False,
     gradient_checkpointing=True,
-    evaluation_strategy = "steps",
-    save_strategy = "epoch",
+    evaluation_strategy="steps",
+    save_strategy="epoch",
     eval_steps=100,
     logging_steps=100, 
-    report_to="tensorboard"
+    report_to="tensorboard",
+    remove_unused_columns=False
 )
 
 dpo_trainer = DPOTrainer(
     peft_model,
     model_adapter_name="sft",
     ref_adapter_name="ref",
-    args=training_args,
     beta=0.1,
+    loss_type='sigmoid',
+    args=training_args,
     train_dataset=tuning_datasets['train'],
+    eval_dataset=tuning_datasets['valid'],
     tokenizer=tokenizer,
+    max_length=4096,
+    max_prompt_length=4096-512
 )
+
+peft_model.print_trainable_parameters()
+
+torch.cuda.empty_cache()
+
+dpo_trainer.train() 
+dpo_trainer.model.save_pretrained(tuned_model_path)
