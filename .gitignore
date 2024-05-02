@@ -5,7 +5,7 @@ venv
 __pycache__
 .ipynb_checkpoints/
 notes.*
-data/
-resources/
-models/
-build/
+/data/
+/resources/
+/models/
+/build/
