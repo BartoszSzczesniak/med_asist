@@ -1,11 +1,15 @@
+import yaml
 import chromadb
+import importlib.resources
 from langchain_core.prompts import PromptTemplate
-from langchain_core.runnables import RunnablePassthrough
+from langchain_core.runnables import RunnableParallel, RunnablePassthrough, RunnableLambda
 from langchain_core.output_parsers import StrOutputParser
 from sentence_transformers import SentenceTransformer
+from med_assist import data
 from med_assist.config import CONFIG
 from med_assist.components.retriever import Retriever
 from med_assist.components.llm import Llama2
+from med_assist.components.parsers import BooleanOutputParser
 
 def build_chain():
 
@@ -17,48 +21,58 @@ def build_chain():
         name=CONFIG["chromadb"]["collection"]
     )
 
-    # LLM
-
-    llm = Llama2(model=CONFIG['llama']['tuned_path'])
-
     # RAG model / retriever
 
     emb_model = SentenceTransformer(model_name_or_path=CONFIG['gist']['path'])
     retriever = Retriever(model=emb_model, collection=collection, n_results=1)
+        
+    # LLM
+
+    llm = Llama2(model=CONFIG['llama']['tuned_path'])
 
     # prompt template
 
-    llm_prompt_template = """
-
-[INST] <<SYS>>
-You are a helpful and concise assistant. Always return a concise numbered list of facts regarding the question based on the provided context. 
-The list should not include any harmful, unethical or illegal content, it should be socially unbiased and positive in nature.
-The list should be based only on the provided context information and no prior knowledge.
-Include only information relevant to the question and include all the details.
-If the provided context does not contain relevant information, concisely answer that there is no information available on this topic.
-If the question does not make any sense, or is not factually coherent, explain that the question is invalid.
-<</SYS>>
-Context: {context}
-
-Question: {question} 
-[/INST]
-
-Answer: Based on the provided context, here is the list of facts regarding your question: 
-
-"""
-
-    llm_prompt = PromptTemplate(
+    with open(importlib.resources.files(data) / 'prompt_templates.yaml', "r") as file:
+        prompt_templates = yaml.safe_load(file)
+    
+    relevance_prompt = PromptTemplate(
         input_variables=['question', 'context'],
-        template=llm_prompt_template
+        template=prompt_templates.get("relevance")
         )
 
-    # Output parser
+    answer_prompt = PromptTemplate(
+        input_variables=['question', 'context'],
+        template=prompt_templates.get("answer")
+        )
 
-    parser = StrOutputParser()
+    no_answer_prompt = PromptTemplate(
+        input_variables=['question',],
+        template=prompt_templates.get("no_answer")
+        )
+
+    conditional_prompt = RunnableLambda(
+        lambda inputs: \
+            answer_prompt.invoke(inputs.get("prompt_vars")) \
+            if inputs.get('relevance') \
+            else no_answer_prompt.invoke(inputs.get("prompt_vars"))
+        )
+    
+    # parsers
+
+    boolean_output_parser = BooleanOutputParser()
+    answer_parser = StrOutputParser()
 
     # Med assist chain
 
-    return {"context": retriever, "question": RunnablePassthrough()} | llm_prompt | llm | parser
+    relevance_checker = (relevance_prompt | llm | boolean_output_parser)
+
+    chain = (
+        RunnableParallel({"context": retriever, "question": RunnablePassthrough()})
+        | RunnableParallel({"relevance": relevance_checker, "prompt_vars": RunnablePassthrough()})
+        | conditional_prompt | llm | answer_parser
+    ) 
+
+    return chain
 
 if __name__ == "__main__":
 
